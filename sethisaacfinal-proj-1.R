@@ -2,7 +2,7 @@
 #### MSA-level Analysis 
 
 
-#### VARIABLE DESCRIPTIONS (seth + isaac)
+#### VARIABLE DESCRIPTIONS (seth + isaac
 # overlap index: 
 # dissimilarity index: 
 # lnfcrate: loan forclosure rate percentage of loaners who stop making payments, essentially defaulting
