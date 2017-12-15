@@ -1,7 +1,6 @@
 #### Replication Paper
 #### MSA-level Analysis 
 
-
 #### VARIABLE DESCRIPTIONS (seth + isaac
 # overlap index: 
 # dissimilarity index: 
@@ -13,6 +12,7 @@ setwd("~/workspace/cs112/final project/segregation subprime/provided data")
 cbsadata <- read.csv("cbsa_data_(publicview)-no-head1.csv", header=TRUE, stringsAsFactors=FALSE)
 #### Install the following packages for R. 
 install.packages("Zelig")
+
 install.packages("MatchIt")
 install.packages("cem")
 library(Zelig)
@@ -92,15 +92,19 @@ matchdata.quant <- subset(matchdata, matchdata$diss_quant!=2)
 #### subset the data to even fewer variables of interest
 matchquant2 <- as.data.frame(cbind(matchdata.quant[1:2], matchdata.quant[4], matchdata.quant[6], matchdata.quant[9], matchdata.quant[11], matchdata.quant[16:18]))
 
-#### use coarsened exact matching to match, set to wide bins due to small number of observations and only match on necessary variables to match
-# Note: here we are only matching on bhisp and ratio_hs_hu2000, not others. Can GenMatch improve?
-cem.match.quant <- cem(treatment="diss_quant", data = matchquant2, cutpoints=list(bhisp=4, ratio_hs_hu2000=4), drop=c("cbsa","overlap_index","lnfcrate","diss_quant", "lnpop2008","ratio_boom_hist","lnmedhhinc"))
+#### use coarsened exact matching to match, set to wide bins due to small 
+#### number of observations and only match on necessary variables to match
+# Note: here we are only based on the covariates bhisp and ratio_hs_hu2000, not others
+cem.match.quant <- cem(treatment="diss_quant", data = matchquant2, 
+                       cutpoints=list(bhisp=4, ratio_hs_hu2000=4), 
+                       drop=c("cbsa","overlap_index","lnfcrate",
+                              "diss_quant", "lnpop2008","ratio_boom_hist","lnmedhhinc"))
 cem.match.quant
 
 #### check balance prior to matching for only the covariates matched
 # FIX: commented out line below to fix drop list variable names
 #pre.imbalance <- imbalance(group=matchquant2$diss_quant, data=matchquant2, drop=c("matchquant2$cbsa","matchquant2$overlap_index","matchquant2$diss_quant","matchquant2$lnfcrate", "matchquant2$lnpop2008","matchquant2$ratio_boom_hist","matchquant2$lnmedhhinc"))
-pre.imbalance2 <- imbalance(group=matchquant2$diss_quant, data=matchquant2, drop=c("cbsa","overlap_index","diss_quant","lnfcrate", "ratio_boom_hist"))
+pre.imbalance <- imbalance(group=matchquant2$diss_quant, data=matchquant2, drop=c("cbsa","overlap_index","diss_quant","lnfcrate", "lnpop2008", "ratio_boom_hist", "lnmedhhinc"))
 pre.imbalance
 
 #### check balance prior to matching for additional covariates
@@ -110,7 +114,7 @@ pre.imbalance2
 #### check balance after matching with additional covariates
 cem.match.quant.data <- cbind(matchquant2, cem.match.quant$matched)
 cem.match.quant.data <- subset(cem.match.quant.data, cem.match.quant$matched==TRUE)
-post.imbalance <- imbalance(group=cem.match.quant.data$diss_quant, data=cem.match.quant.data, drop=c("cbsa","overlap_index","diss_quant","lnfcrate","ratio_boom_hist","cem.match.quant$matched"))
+post.imbalance <- imbalance(group=cem.match.quant.data$diss_quant, data=cem.match.quant.data, drop=c("cbsa","overlap_index","diss_quant","lnfcrate","cem.match.quant$matched", "ratio_boom_hist"))
 # result: better matching on the variables we matched on
 # result: worse matching on other test variables: lnpop2008 and lnmedhhinc
 post.imbalance
@@ -137,8 +141,6 @@ xtable(summary(cem.model.quant.alt), digits=3)
 cem.model.quant.all <- att(obj=cem.match.quant, formula= overlap_index ~ bh_w_diss +ratio_hs_hu2000 + ratio_boom_hist + bhisp + lnpop2008 + lnmedhhinc + west + mw + south, data=matchdata.quant, model = "linear")
 summary(cem.model.quant.all)
 xtable(summary(cem.model.quant.all), digits=3)
-
-
 
 #### Running original Rugh and Massey regression with their outcome variable (lnfcrate) with matched pairs
 #### ATT for just segregation plus demographic controls on log forclosure rate
